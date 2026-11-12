@@ -1,0 +1,20 @@
+services:
+  upstream:
+    build: ./gateway
+    entrypoint: ["/upstream"]
+    command: ["--addr=:9090"]
+  gateway:
+    build: ./gateway
+    command: ["--addr=:8080", "--upstream=http://upstream:9090", "--algorithm=${ALGORITHM:-token_bucket}", "--limit=${LIMIT:-100}", "--window=${WINDOW:-1s}", "--client-header=X-Test-Client"]
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on: [upstream]
+  k6:
+    image: grafana/k6:1.0.0
+    profiles: ["test"]
+    volumes: ["./loadtest:/scripts:ro"]
+    environment:
+      BASE_URL: http://gateway:8080
+      RPS: ${RPS:-200}
+      CLIENTS: ${CLIENTS:-1}
+      DURATION: ${DURATION:-30s}
+    command: ["run", "/scripts/sustained.js"]
