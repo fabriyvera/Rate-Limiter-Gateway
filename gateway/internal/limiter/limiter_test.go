@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tuusuario/rate-limiter-gateway/internal/limiter"
+	"github.com/fabriyvera/Rate-Limiter-Gateway/internal/limiter"
 )
 
 // newLimiters devuelve los 4 algoritmos con la misma config para tests comparativos.

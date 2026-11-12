@@ -1,0 +1,36 @@
+name: v1 validation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache: false
+      - run: test -z "$(gofmt -l .)" && go vet ./... && go test -race -cover ./...
+        working-directory: gateway
+  k6:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        algorithm: [fixed_window, token_bucket, sliding_window_log, sliding_window_counter]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up -d --build
+        env:
+          ALGORITHM: ${{ matrix.algorithm }}
+          LIMIT: '2'
+          WINDOW: 2s
+      - run: |
+          for i in $(seq 1 30); do
+            if curl --fail http://127.0.0.1:8080/healthz; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - run: docker compose run --rm k6 run /scripts/smoke.js
+      - if: always()
+        run: docker compose logs && docker compose down

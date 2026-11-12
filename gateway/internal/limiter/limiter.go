@@ -21,6 +21,7 @@ type RateLimitInfo struct {
 // Config contiene la configuración de un rate limiter.
 // Algunos campos son específicos de ciertos algoritmos.
 type Config struct {
+	MaxKeys int // Maximum active client identities; zero defaults to 10000.
 	// Campos comunes a todos los algoritmos
 	Limit  int           // máximo de requests permitidas
 	Window time.Duration // ventana de tiempo
