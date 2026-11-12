@@ -32,5 +32,7 @@ jobs:
           done
           exit 1
       - run: docker compose run --rm k6 run /scripts/smoke.js
+      - run: docker compose run --rm -e DURATION=3s -e RPS=20 k6 run /scripts/sustained.js
+      - run: docker compose run --rm -e RPS=30 k6 run /scripts/burst.js
       - if: always()
         run: docker compose logs && docker compose down
