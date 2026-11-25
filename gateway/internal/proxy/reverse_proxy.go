@@ -25,6 +25,16 @@ type Gateway struct {
 	allowed, rejected, unavailable, upstreamErrors atomic.Uint64
 }
 
+// Snapshot returns cumulative decisions. Allowed is not a count of upstream 2xx responses.
+func (g *Gateway) Snapshot() map[string]uint64 {
+	return map[string]uint64{"allowed": g.allowed.Load(), "rejected": g.rejected.Load(), "unavailable": g.unavailable.Load(), "upstream_errors": g.upstreamErrors.Load()}
+}
+
+// CloseIdleConnections releases pooled connections when a local policy is replaced.
+func (g *Gateway) CloseIdleConnections() {
+	g.proxy.Transport.(*http.Transport).CloseIdleConnections()
+}
+
 func New(target string, l limiter.Limiter, clientHeader string, timeout time.Duration) (*Gateway, error) {
 	u, err := url.Parse(target)
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.Fragment != "" {

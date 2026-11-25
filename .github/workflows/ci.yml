@@ -1,4 +1,4 @@
-name: v1 validation
+name: gateway and lab validation
 on: [push, pull_request]
 permissions:
   contents: read
@@ -36,3 +36,20 @@ jobs:
       - run: docker compose run --rm -e RPS=30 k6 run /scripts/burst.js
       - if: always()
         run: docker compose logs && docker compose down
+  lab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache: false
+      - name: Install k6 for real lab integration
+        run: |
+          curl -fsSL https://github.com/grafana/k6/releases/download/v2.4.0/k6-v2.4.0-linux-amd64.tar.gz -o /tmp/k6.tar.gz
+          echo '5a5ecf23529ccf93135bc7e5b0c1cd5126ecf5f2672e22eed1556a0ab74abb87  /tmp/k6.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/k6.tar.gz -C /tmp
+          echo /tmp/k6-v2.4.0-linux-amd64 >> "$GITHUB_PATH"
+      - run: go test -race -v ./internal/lab
+        working-directory: gateway
+      - run: node --check gateway/internal/lab/web/app.js

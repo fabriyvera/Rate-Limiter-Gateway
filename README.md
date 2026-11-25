@@ -2,7 +2,36 @@
 
 Gateway HTTP en Go para experimentos locales con cuatro algoritmos en memoria.
 Esta versión usa solo la biblioteca estándar y una instancia. Redis, reglas por ruta,
-circuit breaker y dashboard pertenecen a etapas posteriores (ADR 004).
+circuit breaker pertenecen a etapas posteriores (ADR 004).
+
+## Panel web local: Rate Lab
+
+Desde la raíz del repositorio, con Go 1.23+ instalado:
+
+```sh
+cd gateway
+go run ./cmd/lab
+```
+
+Abre **http://127.0.0.1:7070**. Este comando inicia el panel, un gateway real en
+`127.0.0.1:8080` y un backend de demostración. No requiere Node, npm ni Docker.
+Detén cualquier gateway anterior que ocupe el puerto 8080.
+
+- Selecciona cualquiera de los cuatro algoritmos y aplica sus parámetros.
+- Envía una solicitud o diez seguidas; consulta 200, 429, cuota y Retry-After.
+- Ejecuta carga sostenida o ráfagas con k6, consulta p95 e historial y exporta JSON.
+
+Para habilitar el botón de pruebas k6 en Windows:
+
+```powershell
+winget install k6 --source winget
+```
+
+Abre una terminal nueva y reinicia `go run ./cmd/lab` después de instalar k6.
+Sin k6, la configuración y las pruebas manuales siguen funcionando.
+El laboratorio se limita a tu equipo y conserva datos en memoria; exporta antes de cerrar.
+Consulta [la guía del panel](docs/frontend.md) para probar cada algoritmo e interpretar resultados.
+El flujo CLI y Docker que sigue continúa disponible por separado.
 
 ## Inicio local (PowerShell o terminal)
 Requiere Go 1.23+ y k6 instalado según https://grafana.com/docs/k6/latest/set-up/install-k6/.
