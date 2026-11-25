@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate Lab · Gateway</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<aside class="sidebar">
+ <a class="brand" href="#overview"><span class="mark">R<span>↳</span></span><span>Rate Lab<small>GATEWAY WORKSPACE</small></span></a>
+ <p class="nav-label">LABORATORIO</p>
+ <nav aria-label="Navegación principal"><a href="#overview">◫ <span>Vista general</span></a><a href="#configuration">⚙ <span>Configuración</span></a><a href="#tests">▷ <span>Pruebas de carga</span></a><a href="#history">◷ <span>Historial</span><span id="history-count" class="nav-count">0</span></a></nav>
+ <div class="sidebar-bottom"><div class="local-icon">⌘</div><strong>Tu entorno local</strong><p>Una instancia. Estado en memoria. Control completo.</p><span class="version">v1 / laboratorio</span></div>
+</aside>
+<main>
+ <header class="topbar"><span>Rate-Limiter-Gateway <span class="slash">/</span> <strong>Laboratorio</strong></span><span class="connection" id="connection" role="status">Conectando…</span></header>
+ <section id="overview" class="section">
+  <div class="page-heading"><div><div class="eyebrow">OBSERVA · CONFIGURA · EXPERIMENTA</div><h1>Laboratorio de tráfico<span>.</span></h1><p>Prueba tus políticas y observa qué pasa con cada solicitud.</p></div><button class="button secondary" id="export-session">↓ Exportar sesión</button></div>
+  <div class="environment"><span class="pill">LOCAL</span><span id="gateway-url">—</span><span class="divider"></span><span>Almacenamiento <strong>en memoria</strong></span><span class="algorithm-badge" id="active-algorithm">—</span></div>
+  <div class="stats"><article class="stat"><span>Solicitudes evaluadas</span><strong id="stat-total">0</strong><small>Desde el último reinicio</small></article><article class="stat"><span><i class="dot green"></i>Admitidas por el gateway</span><strong id="stat-allowed">0</strong><small>Enviadas al backend</small></article><article class="stat"><span><i class="dot orange"></i>Rechazadas por cuota</span><strong id="stat-rejected">0</strong><small>Respuestas HTTP 429</small></article><article class="stat"><span>Errores del sistema</span><strong id="stat-errors">0</strong><small>Limiter o conexión al backend</small></article></div>
+  <article class="card traffic-card"><div class="card-heading"><div><h2>Tráfico en tiempo real</h2><p>Decisiones por segundo · últimas 45 muestras</p></div><div class="legend"><span><i class="dot green"></i>Admitidas</span><span><i class="dot orange"></i>Rechazadas</span></div></div><div class="chart"><svg id="traffic-chart" viewBox="0 0 900 170" role="img" aria-label="Gráfico de solicitudes admitidas y rechazadas por segundo"></svg><div id="chart-empty">Envía una solicitud o inicia una prueba para ver el tráfico.</div></div><div class="chart-footer"><span>Hace ~45 segundos</span><span id="chart-rate">0 solicitudes/s</span><span>Ahora</span></div></article>
+ </section>
+ <div class="workspace-grid">
+  <section id="configuration" class="card"><div class="card-heading"><div><span class="eyebrow">POLÍTICA ACTIVA</span><h2>Configura el límite</h2></div><span class="step-tag">01</span></div>
+   <form id="config-form"><fieldset id="config-fields"><legend>Algoritmo</legend><div class="algorithm-grid">
+    <label class="algorithm-option"><input type="radio" name="algorithm" value="token_bucket" checked><span><strong>Token Bucket</strong><small>Ráfagas controladas</small></span></label>
+    <label class="algorithm-option"><input type="radio" name="algorithm" value="fixed_window"><span><strong>Fixed Window</strong><small>Ventanas fijas</small></span></label>
+    <label class="algorithm-option"><input type="radio" name="algorithm" value="sliding_window_log"><span><strong>Sliding Log</strong><small>Conteo exacto</small></span></label>
+    <label class="algorithm-option"><input type="radio" name="algorithm" value="sliding_window_counter"><span><strong>Sliding Counter</strong><small>Conteo aproximado</small></span></label>
+   </div><p id="algorithm-description" class="algorithm-description"></p>
+   <div class="form-grid"><label>Límite de solicitudes<input name="limit" type="number" min="1" max="100000" value="100" required></label><label>Ventana (ms)<input name="window_ms" type="number" min="1" max="3600000" value="1000" required></label></div>
+   <div class="form-grid" id="token-fields"><label>Capacidad del bucket<input name="capacity" type="number" min="0" max="100000" value="100" required></label><label>Recarga (tokens/s)<input name="rate" type="number" min="0" max="100000" step="any" value="100" required></label></div>
+   <p class="hint">Aplicar reinicia cuotas y contadores. En Token Bucket, 0 deriva la capacidad y recarga del límite y la ventana.</p>
+   <button class="button primary full" type="submit">Aplicar y reiniciar</button></fieldset></form>
+  </section>
+  <section class="card" id="requests"><div class="card-heading"><div><span class="eyebrow">EXPLORACIÓN MANUAL</span><h2>Prueba una solicitud</h2></div><span class="step-tag">02</span></div><p class="intro">Observa las respuestas del gateway antes de generar carga.</p>
+   <label>Identidad del cliente<input id="client-id" value="cliente-demo" maxlength="128" required></label>
+   <div class="request-actions"><button class="button primary" id="send-one">Enviar solicitud</button><button class="button secondary" id="send-ten">Enviar 10 seguidas</button></div>
+   <div class="endpoint"><span>GET</span><code>/api/test</code><small>Backend conectado</small></div>
+   <div class="request-table"><table><thead><tr><th>Hora</th><th>Estado</th><th>Duración</th><th>Restantes</th><th>Reintento</th></tr></thead><tbody id="request-rows"><tr><td colspan="5" class="empty-cell">Tus respuestas aparecerán aquí.</td></tr></tbody></table></div>
+   <p class="hint">El envío manual es secuencial. Su duración incluye el recorrido desde el panel; usa k6 para medir carga.</p>
+  </section>
+ </div>
+ <section class="card section" id="tests"><div class="card-heading"><div><span class="eyebrow">EXPERIMENTO REPRODUCIBLE</span><h2>Pruebas con k6</h2><p>Carga real contra tu gateway. Cada ejecución comienza con cuotas limpias.</p></div><span class="pill neutral" id="k6-status">Comprobando k6</span></div>
+  <div class="notice" id="k6-notice" hidden>k6 no está disponible. Ejecuta <code>winget install k6 --source winget</code> en PowerShell y reinicia este laboratorio. Las pruebas manuales siguen disponibles.</div>
+  <form id="run-form"><fieldset id="run-fields"><div class="run-grid"><label>Escenario<select name="scenario"><option value="sustained">Carga sostenida</option><option value="burst">Ráfaga y recuperación</option></select></label><label>Solicitudes por segundo<input name="rps" type="number" min="1" max="2000" value="200" required></label><label id="duration-label">Duración / pico (s)<input name="duration" type="number" min="5" max="120" value="15" required></label><label>Clientes<input name="clients" type="number" min="1" max="1000" value="1" required></label></div><p class="hint">En ráfagas, la duración corresponde al pico; se añaden 10 segundos de subida y recuperación. El tráfico se reparte entre los clientes.</p></fieldset>
+   <div class="run-toolbar"><div class="run-state" id="run-state" role="status">Listo para tu próximo experimento</div><button class="button secondary" id="stop-run" type="button" disabled>Detener</button><button class="button primary" id="start-run" type="submit" disabled>▷ Iniciar prueba</button></div>
+  </form>
+  <div id="run-result" hidden><div class="result-grid" id="result-metrics"></div><p id="result-note" class="hint"></p><details><summary>Ver salida de k6</summary><pre id="run-log"></pre></details><button class="button secondary" id="download-run">↓ Descargar resultado JSON</button></div>
+ </section>
+ <section class="section" id="history"><div class="card-heading"><div><h2>Historial de experimentos</h2><p>Últimas 10 ejecuciones de esta sesión. Exporta antes de cerrar el laboratorio.</p></div></div><div id="history-list" class="history-list"><div class="history-empty">Aún no hay experimentos.<br><span>Tu primera ejecución de k6 aparecerá aquí.</span></div></div></section>
+ <footer><span>Rate Lab · Rate-Limiter-Gateway</span><span>200 admitida · 429 limitada · 502/503 error</span></footer>
+</main><div id="toast" role="status" aria-live="polite" hidden></div>
+</body></html>
